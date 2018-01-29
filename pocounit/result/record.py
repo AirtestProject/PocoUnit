@@ -41,7 +41,11 @@ class ScreenRecorder(PocoTestResultEmitter):
     def stop(self):
         if self.device and hasattr(self.device, 'stop_recording'):
             self.emit(self.TAG, {'event': 'stopped'})
-            return self.device.stop_recording(self.record_filepath)
+            try:
+                return self.device.stop_recording(self.record_filepath)
+            except:
+                # compatible with device not recordable
+                pass
         return False
 
     def finalize(self):

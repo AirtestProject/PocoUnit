@@ -12,7 +12,7 @@ reqs = [str(ir.req) for ir in install_reqs if ir.req]
 
 setup(
     name='pocounit',
-    version='1.0.6',
+    version='1.0.7',
     keywords="PocoUnit unittest",
     description='Unittest framework for poco and airtest',
     packages=find_packages(),
