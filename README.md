@@ -1,6 +1,6 @@
 # PocoUnit (unittest framework)
 
-可配合airtest和poco使用的单元测试框架。规范了脚本编写的格式，提供流式日志（stream log）记录服务，然后可以使用[PocoResultPlayer](http://top.gdl.netease.com/poco-res/PocoTestResultPlayer-win32-x64.zip)将运行的内容回放。
+可配合airtest和poco使用的单元测试框架。规范了脚本编写的格式，提供流式日志（stream log）记录服务，然后可以使用[PocoResultPlayer](http://poco.readthedocs.io/en/latest/source/doc/about-test-result-player.html)将运行的内容回放。
 
 ## Installation
 
