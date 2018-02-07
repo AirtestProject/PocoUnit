@@ -66,4 +66,6 @@ def main():
 
     # launch test
     runner = PocoTestRunner()
-    runner.run(suite)
+    result = runner.run(suite)
+    if not result.wasSuccessful():
+        exit(-1)
