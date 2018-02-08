@@ -12,7 +12,8 @@ class PocoResultCollector(object):
         self.testcases_filenames = testcases_filenames  # [full path], multiple files
         self.testcase_dir = testcase_dir
         self.project_root = project_root
-        self.root = os.path.abspath(os.path.join(testcase_dir, 'result'))
+
+        self.root = os.path.join(testcase_dir, 'result')
         if os.path.isfile(self.root):
             raise RuntimeError('"{}" already exists as non-directory, please remove it.')
         if not os.path.exists(self.root):
@@ -35,5 +36,5 @@ class PocoResultCollector(object):
         return self.testcases_filenames
 
     def add_testcase_file(self, path):
-        path = os.path.abspath(path)
+        path = os.path.join(self.project_root, path)
         self.testcases_filenames.append(path)

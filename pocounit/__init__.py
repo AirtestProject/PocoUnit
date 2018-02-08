@@ -1,4 +1,5 @@
 # coding=utf-8
+from __future__ import print_function
 
 import os
 import inspect
@@ -27,13 +28,14 @@ def has_override(method, subCls, baseCls):
 
 def main():
     project_root = os.getenv("PROJECT_ROOT") or os.getcwd()
-    project_root = os.path.abspath(project_root)
+    print('using "{}" as project root.'.format(project_root))
 
     current_frame = inspect.currentframe()
     caller = current_frame.f_back
-    test_case_filename = os.path.abspath(caller.f_code.co_filename)
+    test_case_filename = caller.f_code.co_filename
     test_case_dir = os.path.dirname(test_case_filename)
     caller_scope = caller.f_locals
+    print('this testcase filename is "{}".'.format(test_case_filename))
 
     # 这部分代码放到loader里
     Cases = [v for k, v in caller_scope.items()
