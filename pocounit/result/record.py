@@ -44,13 +44,9 @@ class ScreenRecorder(PocoTestResultEmitter):
             try:
                 return self.device.stop_recording(self.record_filepath)
             except:
-                # compatible with device not recordable
-                pass
+                try:
+                    # 如果停止失败，就尝试直接pull最后一次录屏文件
+                    return self.device.recorder.pull_last_recording_file(self.record_filepath)
+                except:
+                    pass
         return False
-
-    def finalize(self):
-        if self.device and hasattr(self.device, 'stop_recording'):
-            try:
-                self.device.stop_recording(self.record_filepath)
-            except:
-                pass
