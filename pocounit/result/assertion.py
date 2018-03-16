@@ -25,19 +25,25 @@ class AssertionRecorder(PocoTestResultEmitter):
         # tb用来format一个完整的tb
         # 去到离现场最近的tb位置
         tb1 = tb
+        tb_stack = [tb1]
         while tb1.tb_next:
             tb1 = tb1.tb_next
+            tb_stack.append(tb1)
 
         # 跳过unittest相关的tb frame
         while tb and '__unittest' in tb.tb_frame.f_globals:
             tb = tb.tb_next
+
+        lineno, srcfilename = None, None
         if tb:
-            lineno, srcfilename = get_current_lineno_of(self.collector.get_testcases_filenames(), tb1.tb_frame)
-            srcfilename = os.path.relpath(srcfilename, self.collector.get_project_root_path())
+            while tb_stack:
+                lineno, srcfilename = get_current_lineno_of(self.collector.get_testcases_filenames(), tb_stack.pop().tb_frame)
+                if srcfilename:
+                    break
+            if srcfilename:
+                srcfilename = os.path.relpath(srcfilename, self.collector.get_project_root_path())
             formatted_tb = ''.join(traceback.format_exception(errtype, e, tb))
         else:
-            lineno = None
-            srcfilename = None
             formatted_tb = ''
         self.emit(self.TAG, {'method': 'traceback', 'errtype': errtype.__name__, 'traceback': formatted_tb,
                              'lineno': lineno, 'srcfilename': srcfilename})
