@@ -15,7 +15,7 @@ class AndroidNativeUITestCase(PocoTestCase):
 
         # 启用动作捕捉(action tracker)和游戏运行时日志捕捉插件(runtime logger)
         action_tracker = ActionTracker(cls.poco)
-        cls.register_addin(action_tracker)
+        cls.register_addon(action_tracker)
 
 
 class T1(AndroidNativeUITestCase):

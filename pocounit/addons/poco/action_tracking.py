@@ -1,15 +1,15 @@
 # coding=utf-8
 
-from pocounit.addons import PocoUnitAddin
+from pocounit.addons import PocoUnitAddon
 
 
-class ActionTracker(PocoUnitAddin):
+class ActionTracker(PocoUnitAddon):
     def __init__(self, poco):
         self.poco = poco
         self.action_recorder = None
 
-    def initialize(self, case):
-        self.action_recorder = case.get_result_emitter('actionRecorder')
+    def initialize(self, Case):
+        self.action_recorder = Case.get_result_emitter('actionRecorder')
         self.poco.add_pre_action_callback(self.on_pre_action)
         self.poco.add_post_action_callback(self.on_post_action)
 

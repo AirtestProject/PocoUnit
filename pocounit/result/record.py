@@ -3,17 +3,19 @@
 import os
 
 from pocounit.result.emitter import PocoTestResultEmitter
+from airtest.core.api import device as current_device
 
 
 class ScreenRecorder(PocoTestResultEmitter):
     TAG = 'record'
 
-    def __init__(self, collector, device):
+    def __init__(self, collector, device=None):
         super(ScreenRecorder, self).__init__(collector)
-        self.device = device  # 先用着airtest device
+        self.device = device or current_device()
         self.record_filepath = os.path.join(self.collector.get_root_path(), 'screen.mp4')
 
     def start(self):
+        self.device = self.device or current_device()
         if self.device and hasattr(self.device, 'start_recording'):
             try:
                 # force to stop before starting new recoding
@@ -39,6 +41,7 @@ class ScreenRecorder(PocoTestResultEmitter):
         return False
 
     def stop(self):
+        self.device = self.device or current_device()
         if self.device and hasattr(self.device, 'stop_recording'):
             self.emit(self.TAG, {'event': 'stopped'})
             try:

@@ -31,7 +31,7 @@ class GxxTestCase(PocoTestCase):
 
         # 启用动作捕捉(action tracker)
         action_tracker = ActionTracker(cls.poco)
-        cls.register_addin(action_tracker)
+        cls.register_addon(action_tracker)
 ```
 
 然后可以开始编写自己的testcase

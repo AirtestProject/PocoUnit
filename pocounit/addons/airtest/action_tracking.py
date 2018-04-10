@@ -4,7 +4,7 @@ import inspect
 import sys
 import traceback
 
-from pocounit.addons import PocoUnitAddin
+from pocounit.addons import PocoUnitAddon
 from pocounit.addons.airtest.utils import Hooker
 
 from airtest.core.main import loop_find, touch, swipe, exists, assert_exists
@@ -13,7 +13,7 @@ from airtest.core.helper import MoaPic as Target
 from airtest.cli.runner import device as current_device
 
 
-class ActionTracker(PocoUnitAddin):
+class ActionTracker(PocoUnitAddon):
     """
     general airtest action pattern and invocation stack
 
@@ -48,9 +48,9 @@ class ActionTracker(PocoUnitAddin):
         acm.assert_exists = self.assert_exists_
         acc._cv_match = self._cv_match_
 
-    def initialize(self, case):
-        self.action_recorder = case.get_result_emitter('actionRecorder')
-        self.assertion_recorder = case.get_result_emitter('assertionRecorder')
+    def initialize(self, Case):
+        self.action_recorder = Case.get_result_emitter('actionRecorder')
+        self.assertion_recorder = Case.get_result_emitter('assertionRecorder')
 
         frame = sys._getframe(0)
         while frame.f_back is not None:

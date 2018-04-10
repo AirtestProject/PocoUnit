@@ -1,6 +1,6 @@
 # coding=utf-8
 
 
-class PocoUnitAddin(object):
-    def initialize(self, case):
+class PocoUnitAddon(object):
+    def initialize(self, Case):
         pass

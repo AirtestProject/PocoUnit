@@ -1,12 +1,24 @@
 # coding=utf-8
 
+import inspect
+import os
 import sys
 import traceback
 import unittest
+import warnings
 
 from unittest.util import safe_repr
 
 from pocounit.result import PocoTestResult
+from pocounit.result.collector import PocoResultCollector
+from pocounit.result.trace import ScriptTracer
+from pocounit.result.record import ScreenRecorder
+from pocounit.result.action import ActionRecorder
+from pocounit.result.app_runtime import AppRuntimeLog
+from pocounit.result.runner_runtime import RunnerRuntimeLog
+from pocounit.result.assertion import AssertionRecorder
+
+from pocounit.utils.misc import get_project_root
 
 
 class PocoTestCase(unittest.TestCase):
@@ -17,24 +29,59 @@ class PocoTestCase(unittest.TestCase):
     """
     longMessage = True
 
-    testcase_assets_dir = '.'
     _resule_collector = None
     _result_emitters = {}  # name -> PocoTestResultEmitter
-    _addins = []
+    _addons = []
+
+    def __init__(self):
+        super(PocoTestCase, self).__init__()
+        test_case_filename = inspect.getfile(self.__class__)
+        test_case_dir = os.path.dirname(test_case_filename)
+        project_root = get_project_root(test_case_filename)
+        print('using "{}" as project root.'.format(project_root))
+
+        collector = PocoResultCollector(project_root, [test_case_filename], self.name(), test_case_dir)
+        runner_runtime_log = RunnerRuntimeLog(collector)
+        tracer = ScriptTracer(collector)
+        screen_recorder = ScreenRecorder(collector)
+        action_recorder = ActionRecorder(collector)
+        app_runtime_log = AppRuntimeLog(collector)
+        assertion_recorder = AssertionRecorder(collector)
+
+        self.set_result_collector(collector)
+        self.add_result_emitter('runnerRuntimeLog', runner_runtime_log)
+        self.add_result_emitter('tracer', tracer)
+        self.add_result_emitter('screenRecorder', screen_recorder)
+        self.add_result_emitter('actionRecorder', action_recorder)
+        self.add_result_emitter('appRuntimeLog', app_runtime_log)
+        self.add_result_emitter('assertionRecorder', assertion_recorder)
+
+    @classmethod
+    def name(cls):
+        """
+        改写此方法来自定义testcase的名字，允许中文，请使用utf-8编码的str或者unicode
+
+        :return:
+        """
+
+        if type(cls) is type:
+            return cls.__name__
+        else:
+            return cls.__class__.__name__
 
     @classmethod
     def setUpClass(cls):
         """
-        相当于airtest的pre脚本
+        用例预处理，加载自定义插件等
+
         :return: 
         """
-
         pass
 
     def setUp(self):
         """
         初始化一个testcase
-        不要把测试逻辑放到这里写，setUp报错的话也相当于真个case报错
+        不要把测试逻辑放到这里写，setUp报错的话也相当于整个case报错
 
         """
 
@@ -59,10 +106,10 @@ class PocoTestCase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """
-        testcase的post脚本
+        用例后处理
+
         :return: 
         """
-
         pass
 
     def shortDescription(self):
@@ -76,10 +123,6 @@ class PocoTestCase(unittest.TestCase):
 
     def defaultTestResult(self):
         return PocoTestResult()
-
-    @classmethod
-    def set_testcase_assets_dir(cls, dirname):
-        cls.testcase_assets_dir = dirname
 
     @classmethod
     def set_result_collector(cls, collector):
@@ -98,8 +141,13 @@ class PocoTestCase(unittest.TestCase):
         return cls._result_emitters.get(name)
 
     @classmethod
-    def register_addin(cls, addin):
-        cls._addins.append(addin)
+    def register_addon(cls, addon):
+        cls._addons.append(addon)
+
+    @classmethod
+    def register_addin(cls, v):
+        warnings.warn('`register_addin` is deprecated. Please use `register_addon` instead.')
+        return cls.register_addon(v)
 
     def run(self, result=None):
         result = result or self.defaultTestResult()
@@ -107,9 +155,9 @@ class PocoTestCase(unittest.TestCase):
             raise TypeError('Test result class should be subclass of PocoTestResult. '
                             'Current test result instance is "{}".'.format(result))
 
-        # register addin
-        for addin in self._addins:
-            addin.initialize(self)
+        # register addon
+        for addon in self._addons:
+            addon.initialize(self)
 
         # start result emitter
         for name, emitter in self._result_emitters.items():
@@ -146,6 +194,7 @@ class PocoTestCase(unittest.TestCase):
             assertionRecorder.fail(msg, str(e), traceback.format_exc())
             raise exc_type, msg, exc_tb
 
+    # assertions
     def assertTrue(self, expr, msg=None):
         assertionRecorder = self.get_result_emitter('assertionRecorder')
         assertionRecorder.assert_('True', [expr], msg)

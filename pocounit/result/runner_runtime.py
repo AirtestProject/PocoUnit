@@ -12,7 +12,7 @@ class Redirector(object):
         self.type = _type
         self.logger = logger
         if hasattr(sys, '__save_origin_std_' + _type):
-            self.origin = getattr(sys, '_safaia_save_origin_std_' + _type)
+            self.origin = getattr(sys, '__save_origin_std_' + _type)
         else:
             self.origin = origin
             setattr(sys, '__save_origin_std_' + _type, origin)
@@ -46,12 +46,22 @@ class RunnerRuntimeLog(PocoTestResultEmitter):
 
     def __init__(self, collector):
         super(RunnerRuntimeLog, self).__init__(collector)
+
+    def start(self):
         if not hasattr(sys, '__redirected_stdout'):
             setattr(sys, '__redirected_stdout', sys.stdout)
             sys.stdout = Redirector(sys.stdout, 'stdout', self)
         if not hasattr(sys, '__redirected_stderr'):
             setattr(sys, '__redirected_stderr', sys.stderr)
             sys.stderr = Redirector(sys.stderr, 'stderr', self)
+
+    def stop(self):
+        if hasattr(sys, '__redirected_stdout'):
+            sys.stdout = sys.stdout.origin
+            delattr(sys, '__redirected_stdout')
+        if hasattr(sys, '__redirected_stderr'):
+            sys.stderr = sys.stderr.origin
+            delattr(sys, '__redirected_stderr')
 
     def log(self, content):
         self.emit(self.TAG, {'content': content})
