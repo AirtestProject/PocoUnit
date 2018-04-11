@@ -13,8 +13,13 @@ class ScreenRecorder(PocoTestResultEmitter):
         super(ScreenRecorder, self).__init__(collector)
         self.device = device or current_device()
         self.record_filepath = os.path.join(self.collector.get_root_path(), 'screen.mp4')
+        self.started = False
 
     def start(self):
+        if self.started:
+            return False
+        self.started = True
+
         self.device = self.device or current_device()
         if self.device and hasattr(self.device, 'start_recording'):
             try:
@@ -41,6 +46,10 @@ class ScreenRecorder(PocoTestResultEmitter):
         return False
 
     def stop(self):
+        if not self.started:
+            return False
+        self.started = False
+
         self.device = self.device or current_device()
         if self.device and hasattr(self.device, 'stop_recording'):
             self.emit(self.TAG, {'event': 'stopped'})

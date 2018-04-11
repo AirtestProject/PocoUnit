@@ -9,6 +9,7 @@ import warnings
 
 from unittest.util import safe_repr
 
+from pocounit.assets_manager import AssetsManager
 from pocounit.result import PocoTestResult
 from pocounit.result.collector import PocoResultCollector
 from pocounit.result.trace import ScriptTracer
@@ -32,6 +33,7 @@ class PocoTestCase(unittest.TestCase):
     _resule_collector = None
     _result_emitters = {}  # name -> PocoTestResultEmitter
     _addons = []
+    _assets_manager = None
 
     def __init__(self):
         super(PocoTestCase, self).__init__()
@@ -39,6 +41,7 @@ class PocoTestCase(unittest.TestCase):
         test_case_dir = os.path.dirname(test_case_filename)
         project_root = get_project_root(test_case_filename)
         print('using "{}" as project root.'.format(project_root))
+        self.__class__._assets_manager = AssetsManager(project_root)
 
         collector = PocoResultCollector(project_root, [test_case_filename], self.name(), test_case_dir)
         runner_runtime_log = RunnerRuntimeLog(collector)
@@ -149,6 +152,10 @@ class PocoTestCase(unittest.TestCase):
         warnings.warn('`register_addin` is deprecated. Please use `register_addon` instead.')
         return cls.register_addon(v)
 
+    @classmethod
+    def get_assets_manager(cls):
+        return cls._assets_manager
+
     def run(self, result=None):
         result = result or self.defaultTestResult()
         if not isinstance(result, PocoTestResult):
@@ -161,7 +168,11 @@ class PocoTestCase(unittest.TestCase):
 
         # start result emitter
         for name, emitter in self._result_emitters.items():
-            emitter.start()
+            try:
+                emitter.start()
+            except Exception as e:
+                warnings.warn('Fail to start result emitter: "{}". Error message: "{}"'
+                              .format(emitter.__class__.__name__, e.message))
 
         # run test
         ex = None
@@ -177,7 +188,10 @@ class PocoTestCase(unittest.TestCase):
 
         # stop result emitter
         for name, emitter in self._result_emitters.items():
-            emitter.stop()
+            try:
+                emitter.stop()
+            except:
+                pass
 
         # handle result
         if ex is not None:
