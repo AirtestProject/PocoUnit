@@ -37,7 +37,7 @@ class PocoTestCase(unittest.TestCase):
 
     def __init__(self):
         super(PocoTestCase, self).__init__()
-        test_case_filename = inspect.getfile(self.__class__)
+        test_case_filename = os.path.abspath(inspect.getfile(self.__class__))
         test_case_dir = os.path.dirname(test_case_filename)
         project_root = get_project_root(test_case_filename)
         print('using "{}" as project root.'.format(project_root))

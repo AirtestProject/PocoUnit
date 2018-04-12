@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import print_function
 
+import os
 import inspect
 
 from pocounit.case import PocoTestCase
@@ -24,7 +25,7 @@ def main():
     # testcase detection
     current_frame = inspect.currentframe()
     caller = current_frame.f_back
-    test_case_filename = caller.f_code.co_filename  # 脚本务必是绝对路径才行
+    test_case_filename = os.path.abspath(caller.f_code.co_filename)  # 脚本务必是绝对路径才行
     caller_scope = caller.f_locals
     print('this testcase filename is "{}".'.format(test_case_filename))
 
