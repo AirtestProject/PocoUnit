@@ -156,6 +156,10 @@ class PocoTestCase(unittest.TestCase):
     def get_assets_manager(cls):
         return cls._assets_manager
 
+    @classmethod
+    def R(cls, respath):
+        return cls._assets_manager.get_resource_path(respath)
+
     def run(self, result=None):
         result = result or self.defaultTestResult()
         if not isinstance(result, PocoTestResult):

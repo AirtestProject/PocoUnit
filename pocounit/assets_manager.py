@@ -10,3 +10,5 @@ class AssetsManager(object):
 
     def get_abspath(self, p):
         return os.path.join(self.project_root, p)
+
+    get_resource_path = get_abspath
