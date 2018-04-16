@@ -11,7 +11,7 @@ def parse_requirements(filename='requirements.txt'):
 
 setup(
     name='pocounit',
-    version='1.0.15',
+    version='1.0.16',
     keywords="PocoUnit unittest",
     description='Unittest framework for poco and airtest',
     packages=find_packages(),

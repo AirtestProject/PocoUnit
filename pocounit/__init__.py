@@ -37,8 +37,14 @@ def main():
              and has_override("runTest", v, PocoTestCase)
              ]
 
-    success = (all([run(Case).wasSuccessful() for Case in Cases]))
-    print(success)
+    suite = PocoTestSuite()
+    for Case in Cases:
+        case = Case()
+        suite.addTest(case)
+
+    runner = PocoTestRunner()
+    success = runner.run(suite)
+
     if not success:
         exit(-1)
 

@@ -129,6 +129,8 @@ class PocoTestCase(unittest.TestCase):
 
     @classmethod
     def set_result_collector(cls, collector):
+        if isinstance(cls, PocoTestCase):
+            cls = cls.__class__
         cls._resule_collector = collector
 
     @classmethod
