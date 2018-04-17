@@ -11,12 +11,11 @@ from pocounit.suite import PocoTestSuite
 from pocounit.utils.misc import has_override
 
 
-def run(Case):
-    # 暴力一个case装一个suite里面，不能使用unittest里的suite，多个case一起初始化后会所以result
-    # 都会写到最后一个初始化的case里，原因未查明
-    case = Case()
-    suite = PocoTestSuite()
-    suite.addTest(case)
+def run(suite):
+    if isinstance(suite, PocoTestCase):
+        case = suite
+        suite = PocoTestSuite()
+        suite.addTest(case)
     runner = PocoTestRunner()
     return runner.run(suite)
 

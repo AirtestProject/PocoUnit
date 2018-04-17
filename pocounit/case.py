@@ -9,7 +9,7 @@ import warnings
 
 from unittest.util import safe_repr
 
-from pocounit.assets_manager import AssetsManager
+from pocounit.fixture import FixtureUnit
 from pocounit.result import PocoTestResult
 from pocounit.result.collector import PocoResultCollector
 from pocounit.result.trace import ScriptTracer
@@ -19,10 +19,8 @@ from pocounit.result.app_runtime import AppRuntimeLog
 from pocounit.result.runner_runtime import RunnerRuntimeLog
 from pocounit.result.assertion import AssertionRecorder
 
-from pocounit.utils.misc import get_project_root
 
-
-class PocoTestCase(unittest.TestCase):
+class PocoTestCase(unittest.TestCase, FixtureUnit):
     """
     * longMessage: determines whether long messages (including repr of
         objects used in assert methods) will be printed on failure in *addition*
@@ -33,17 +31,14 @@ class PocoTestCase(unittest.TestCase):
     _resule_collector = None
     _result_emitters = None     # {name -> PocoTestResultEmitter}
     _addons = None              # [addons]
-    _assets_manager = None
 
     def __init__(self):
-        super(PocoTestCase, self).__init__()
-        test_case_filename = os.path.abspath(inspect.getfile(self.__class__))
-        test_case_dir = os.path.dirname(test_case_filename)
-        project_root = get_project_root(test_case_filename)
-        print('using "{}" as project root.'.format(project_root))
-        self.set_assets_manager(AssetsManager(project_root))
+        unittest.TestCase.__init__(self)
+        FixtureUnit.__init__(self)
 
-        collector = PocoResultCollector(project_root, [test_case_filename], self.name(), test_case_dir)
+        collector = PocoResultCollector(self.project_root, [self.test_case_filename], self.name(), self.test_case_dir)
+        self.set_result_collector(collector)
+
         runner_runtime_log = RunnerRuntimeLog(collector)
         tracer = ScriptTracer(collector)
         screen_recorder = ScreenRecorder(collector)
@@ -51,7 +46,6 @@ class PocoTestCase(unittest.TestCase):
         app_runtime_log = AppRuntimeLog(collector)
         assertion_recorder = AssertionRecorder(collector)
 
-        self.set_result_collector(collector)
         self.add_result_emitter('runnerRuntimeLog', runner_runtime_log)
         self.add_result_emitter('tracer', tracer)
         self.add_result_emitter('screenRecorder', screen_recorder)
@@ -81,15 +75,6 @@ class PocoTestCase(unittest.TestCase):
         """
         pass
 
-    def setUp(self):
-        """
-        初始化一个testcase
-        不要把测试逻辑放到这里写，setUp报错的话也相当于整个case报错
-
-        """
-
-        pass
-
     def runTest(self):
         """
         testcase的正文，把要执行的测试和包括断言语句都写到这里
@@ -97,14 +82,6 @@ class PocoTestCase(unittest.TestCase):
         """
 
         raise NotImplementedError
-
-    def tearDown(self):
-        """
-        一个testcase的清场工作
-
-        """
-
-        pass
 
     @classmethod
     def tearDownClass(cls):
@@ -129,7 +106,7 @@ class PocoTestCase(unittest.TestCase):
 
     @classmethod
     def set_result_collector(cls, collector):
-        if isinstance(cls, PocoTestCase):
+        if type(cls) is not type:
             cls = cls.__class__
         cls._resule_collector = collector
 
@@ -139,7 +116,7 @@ class PocoTestCase(unittest.TestCase):
 
     @classmethod
     def add_result_emitter(cls, name, emitter):
-        if isinstance(cls, PocoTestCase):
+        if type(cls) is not type:
             cls = cls.__class__
         if not cls._result_emitters:
             cls._result_emitters = {}
@@ -151,7 +128,7 @@ class PocoTestCase(unittest.TestCase):
 
     @classmethod
     def register_addon(cls, addon):
-        if isinstance(cls, PocoTestCase):
+        if type(cls) is not type:
             cls = cls.__class__
         if not cls._addons:
             cls._addons = []
@@ -161,20 +138,6 @@ class PocoTestCase(unittest.TestCase):
     def register_addin(cls, v):
         warnings.warn('`register_addin` is deprecated. Please use `register_addon` instead.')
         return cls.register_addon(v)
-
-    @classmethod
-    def set_assets_manager(cls, v):
-        if isinstance(cls, PocoTestCase):
-            cls = cls.__class__
-        cls._assets_manager = v
-
-    @classmethod
-    def get_assets_manager(cls):
-        return cls._assets_manager
-
-    @classmethod
-    def R(cls, respath):
-        return cls._assets_manager.get_resource_path(respath)
 
     def run(self, result=None):
         result = result or self.defaultTestResult()
