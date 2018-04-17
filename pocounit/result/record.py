@@ -41,6 +41,7 @@ class ScreenRecorder(PocoTestResultEmitter):
 
                 # orientation: current orientation
                 # resolution: recording resolution. 当前默认等于屏幕分辨率
+                relpath = relpath.replace('\\', '/')
                 self.emit(self.TAG, {'event': 'started', 'filename': relpath, 'orientation': orientation, 'resolution': resolution})
             return success
         return False

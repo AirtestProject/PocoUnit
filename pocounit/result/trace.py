@@ -32,6 +32,7 @@ class ScriptTracer(PocoTestResultEmitter):
             if event == 'line' and frame.f_code.co_filename.lower() in self._script_filenames_lower:
                 line_num = frame.f_lineno
                 fname = os.path.relpath(frame.f_code.co_filename, self.project_root)
+                fname = fname.replace('\\', '/')
                 self.emit(self.TAG, {'filename': fname, 'lineno': line_num})  # 暂时忽略不同路径同名的情况
             return tracer
         return tracer

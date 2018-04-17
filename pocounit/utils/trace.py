@@ -13,6 +13,6 @@ def get_current_lineno_of(filenames, frame=None):
         frame = frame.f_back
 
     if frame:
-        return frame.f_lineno, frame.f_code.co_filename
+        return frame.f_lineno, frame.f_code.co_filename.replace('\\', '/')
     else:
         return None, None
