@@ -1,5 +1,9 @@
 # coding=utf-8
 
+"""
+这个文件别引用，未完成
+"""
+
 import inspect
 import sys
 import traceback
@@ -7,9 +11,9 @@ import traceback
 from pocounit.addons import PocoUnitAddon
 from pocounit.addons.airtest.utils import Hooker
 
-from airtest.core.main import loop_find, touch, swipe, exists, assert_exists
+from airtest.core.api import loop_find, touch, swipe, exists, assert_exists
 from airtest.core.cv import _cv_match
-from airtest.core.helper import MoaPic as Target
+from airtest.core.api import Template as Target
 from airtest.cli.runner import device as current_device
 
 

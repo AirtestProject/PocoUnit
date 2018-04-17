@@ -31,8 +31,8 @@ class PocoTestCase(unittest.TestCase):
     longMessage = True
 
     _resule_collector = None
-    _result_emitters = {}  # name -> PocoTestResultEmitter
-    _addons = []
+    _result_emitters = None     # {name -> PocoTestResultEmitter}
+    _addons = None              # [addons]
     _assets_manager = None
 
     def __init__(self):
@@ -41,7 +41,7 @@ class PocoTestCase(unittest.TestCase):
         test_case_dir = os.path.dirname(test_case_filename)
         project_root = get_project_root(test_case_filename)
         print('using "{}" as project root.'.format(project_root))
-        self.__class__._assets_manager = AssetsManager(project_root)
+        self.set_assets_manager(AssetsManager(project_root))
 
         collector = PocoResultCollector(project_root, [test_case_filename], self.name(), test_case_dir)
         runner_runtime_log = RunnerRuntimeLog(collector)
@@ -139,6 +139,10 @@ class PocoTestCase(unittest.TestCase):
 
     @classmethod
     def add_result_emitter(cls, name, emitter):
+        if isinstance(cls, PocoTestCase):
+            cls = cls.__class__
+        if not cls._result_emitters:
+            cls._result_emitters = {}
         cls._result_emitters[name] = emitter
 
     @classmethod
@@ -147,12 +151,22 @@ class PocoTestCase(unittest.TestCase):
 
     @classmethod
     def register_addon(cls, addon):
+        if isinstance(cls, PocoTestCase):
+            cls = cls.__class__
+        if not cls._addons:
+            cls._addons = []
         cls._addons.append(addon)
 
     @classmethod
     def register_addin(cls, v):
         warnings.warn('`register_addin` is deprecated. Please use `register_addon` instead.')
         return cls.register_addon(v)
+
+    @classmethod
+    def set_assets_manager(cls, v):
+        if isinstance(cls, PocoTestCase):
+            cls = cls.__class__
+        cls._assets_manager = v
 
     @classmethod
     def get_assets_manager(cls):
