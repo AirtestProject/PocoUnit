@@ -1,7 +1,5 @@
 # coding=utf-8
 
-import inspect
-import os
 import sys
 import traceback
 import unittest
@@ -11,6 +9,7 @@ from unittest.util import safe_repr
 
 from pocounit.fixture import FixtureUnit
 from pocounit.result import PocoTestResult
+from pocounit.result.metainfo import MetaInfo
 from pocounit.result.collector import PocoResultCollector
 from pocounit.result.trace import ScriptTracer
 from pocounit.result.record import ScreenRecorder
@@ -39,6 +38,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         collector = PocoResultCollector(self.project_root, [self.test_case_filename], self.name(), self.test_case_dir)
         self.set_result_collector(collector)
 
+        meta_info_emitter = MetaInfo(collector)
         runner_runtime_log = RunnerRuntimeLog(collector)
         tracer = ScriptTracer(collector)
         screen_recorder = ScreenRecorder(collector)
@@ -46,12 +46,15 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         app_runtime_log = AppRuntimeLog(collector)
         assertion_recorder = AssertionRecorder(collector)
 
+        self.add_result_emitter('metaInfo', meta_info_emitter)
         self.add_result_emitter('runnerRuntimeLog', runner_runtime_log)
         self.add_result_emitter('tracer', tracer)
         self.add_result_emitter('screenRecorder', screen_recorder)
         self.add_result_emitter('actionRecorder', action_recorder)
         self.add_result_emitter('appRuntimeLog', app_runtime_log)
         self.add_result_emitter('assertionRecorder', assertion_recorder)
+
+        self.meta_info_emitter = meta_info_emitter
 
     @classmethod
     def name(cls):
@@ -145,6 +148,10 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
             raise TypeError('Test result class should be subclass of PocoTestResult. '
                             'Current test result instance is "{}".'.format(result))
 
+        # 自动把当前脚本add到collector的脚本watch列表里
+        collector = self.get_result_collector()
+        collector.add_testcase_file(self.test_case_filename)
+
         # register addon
         for addon in self._addons:
             addon.initialize(self)
@@ -154,8 +161,10 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
             try:
                 emitter.start()
             except Exception as e:
-                warnings.warn('Fail to start result emitter: "{}". Error message: "{}"'
+                warnings.warn('Fail to start result emitter: "{}". Error message: \n"{}"'
                               .format(emitter.__class__.__name__, e.message))
+
+        self.meta_info_emitter.test_started(self.__class__.__name__)
 
         # run test
         ex = None
@@ -168,6 +177,8 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         assertionRecorder = self.get_result_emitter('assertionRecorder')
         for _, exc_type, e, tb in result.detail_errors:
             assertionRecorder.traceback(exc_type, e, tb)
+
+        self.meta_info_emitter.test_ended(self.__class__.__name__)
 
         # stop result emitter
         for name, emitter in self._result_emitters.items():

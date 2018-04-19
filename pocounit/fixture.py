@@ -11,10 +11,10 @@ class FixtureUnit(object):
     _assets_manager = None
 
     def __init__(self):
-        test_case_filename = os.path.abspath(inspect.getfile(self.__class__))
+        test_case_filename = os.path.abspath(inspect.getsourcefile(self.__class__))
         test_case_dir = os.path.dirname(test_case_filename)
         project_root = get_project_root(test_case_filename)
-        print('using "{}" as project root.'.format(project_root))
+        print('using "{}" as project root. This testcase is "{}"'.format(project_root, self.__class__.__name__))
         self.set_assets_manager(AssetsManager(project_root))
 
         self.test_case_filename = test_case_filename

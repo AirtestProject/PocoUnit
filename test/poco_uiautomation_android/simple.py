@@ -3,7 +3,7 @@
 from pocounit.case import PocoTestCase
 from pocounit.addons.poco.action_tracking import ActionTracker
 
-from poco.vendor.android.uiautomation import AndroidUiautomationPoco
+from poco.drivers.android.uiautomation import AndroidUiautomationPoco
 
 
 class AndroidNativeUITestCase(PocoTestCase):
@@ -25,10 +25,5 @@ class T1(AndroidNativeUITestCase):
 
 
 if __name__ == '__main__':
-    from airtest.cli.runner import device as current_device
-    from airtest.core.main import set_serialno
-    if current_device() is None:
-        set_serialno()
-
     import pocounit
     pocounit.main()

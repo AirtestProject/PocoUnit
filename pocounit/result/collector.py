@@ -8,8 +8,10 @@ from pocounit.result.logger import StreamLogger
 
 
 class PocoResultCollector(object):
-    def __init__(self, project_root, testcases_filenames, testcase_name, testcase_dir='.', logfilename='poco-result.log'):
-        self.testcases_filenames = testcases_filenames  # [full path], multiple files
+    def __init__(self, project_root, testcases_filenames, testcase_name, testcase_dir='.',
+                 logfilename='poco-result.log',
+                 metainfofilename='metainfo.txt'):
+        self.testcases_filenames = set(testcases_filenames)  # [full path], multiple files
         self.testcase_dir = testcase_dir
         self.project_root = project_root
 
@@ -24,9 +26,13 @@ class PocoResultCollector(object):
         if not os.path.exists(self.root):
             os.makedirs(self.root)
         self.logger = StreamLogger(os.path.join(self.root, logfilename))
+        self.metainfo_logger = StreamLogger(os.path.join(self.root, metainfofilename))
 
     def collect(self, tag, value):
         self.logger.write(json.dumps({'tag': tag, 'value': value, 'ts': time.time()}))
+
+    def collect_metainfo(self, tag, value):
+        self.metainfo_logger.write(json.dumps({'tag': tag, 'value': value}))
 
     def get_root_path(self):
         return self.root
@@ -48,5 +54,6 @@ class PocoResultCollector(object):
         :return:
         """
 
-        path = os.path.join(self.project_root, path)
-        self.testcases_filenames.append(path)
+        if not os.path.isabs(path):
+            path = os.path.join(self.project_root, path)
+        self.testcases_filenames.add(path)
