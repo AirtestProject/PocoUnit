@@ -156,6 +156,8 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         for addon in self._addons:
             addon.initialize(self)
 
+        self.meta_info_emitter.test_started(self.__class__.__name__)
+
         # start result emitter
         for name, emitter in self._result_emitters.items():
             try:
@@ -163,8 +165,6 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
             except Exception as e:
                 warnings.warn('Fail to start result emitter: "{}". Error message: \n"{}"'
                               .format(emitter.__class__.__name__, e.message))
-
-        self.meta_info_emitter.test_started(self.__class__.__name__)
 
         # run test
         ex = None
@@ -178,8 +178,6 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         for _, exc_type, e, tb in result.detail_errors:
             assertionRecorder.traceback(exc_type, e, tb)
 
-        self.meta_info_emitter.test_ended(self.__class__.__name__)
-
         # stop result emitter
         for name, emitter in self._result_emitters.items():
             try:
@@ -187,10 +185,14 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
             except:
                 pass
 
+        self.meta_info_emitter.test_ended(self.__class__.__name__)
+
         # handle result
         if ex is not None:
+            self.meta_info_emitter.test_fail(self.__class__.__name__)
             raise ex
         else:
+            self.meta_info_emitter.test_succeed(self.__class__.__name__)
             return ret
 
     def fail(self, msg=None):

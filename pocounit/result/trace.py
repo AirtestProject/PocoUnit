@@ -15,6 +15,7 @@ class ScriptTracer(PocoTestResultEmitter):
         self.project_root = self.collector.get_project_root_path()
         self._script_filenames = None
         self._script_filenames_lower = None
+        self._origin_trace_func = None
 
     def start(self):
         self._script_filenames = self.collector.get_testcases_filenames()
@@ -26,7 +27,11 @@ class ScriptTracer(PocoTestResultEmitter):
             if not os.path.exists(dst_dir):
                 os.makedirs(dst_dir)
             shutil.copyfile(f, dst)
+        self._origin_trace_func = sys.gettrace()
         sys.settrace(self._make_tracer())
+
+    def stop(self):
+        sys.settrace(self._origin_trace_func)
 
     def _make_tracer(self):
         def tracer(frame, event, arg):

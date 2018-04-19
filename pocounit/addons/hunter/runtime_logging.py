@@ -12,8 +12,7 @@ class AppRuntimeLogging(PocoUnitAddon):
 
     def initialize(self, Case):
         self.logger = Case.get_result_emitter('appRuntimeLog')
-        central_server_addr = self.hunter.device_info.get('central_server_addr') or ('192.168.40.111', 29003)
-        central_server_url = 'http://{}:{}/webterm'.format(*central_server_addr)
+        central_server_url = 'http://hunter.nie.netease.com/webterm'
         trace(self.hunter.tokenid, self.hunter.device_info['id'], central_server_url, self.on_app_runtime_log)
 
     def on_app_runtime_log(self, data):
