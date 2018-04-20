@@ -35,4 +35,4 @@ def get_project_root(test_case_filename):
 
 
 def has_override(method, subCls, baseCls):
-    return getattr(subCls, method).__func__ is not getattr(baseCls, method).__func__
+    return getattr(subCls, method) != getattr(baseCls, method)
