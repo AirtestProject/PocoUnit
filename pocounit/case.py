@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import six
 import sys
 import traceback
 import unittest
@@ -164,7 +165,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
                 emitter.start()
             except Exception as e:
                 warnings.warn('Fail to start result emitter: "{}". Error message: \n"{}"'
-                              .format(emitter.__class__.__name__, e.message))
+                              .format(emitter.__class__.__name__, six.string_types(e)))
 
         # run test
         ex = None
@@ -202,7 +203,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         except:
             exc_type, e, exc_tb = sys.exc_info()
             assertionRecorder.fail(msg, str(e), traceback.format_exc())
-            raise exc_type, msg, exc_tb
+            six.reraise(exc_type, exc_type(msg), exc_tb)
 
     # assertions
     def assertTrue(self, expr, msg=None):
