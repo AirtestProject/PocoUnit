@@ -165,7 +165,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
                 emitter.start()
             except Exception as e:
                 warnings.warn('Fail to start result emitter: "{}". Error message: \n"{}"'
-                              .format(emitter.__class__.__name__, six.string_types(e)))
+                              .format(emitter.__class__.__name__, six.text_type(e)))
 
         # run test
         ex = None
