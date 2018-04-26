@@ -154,6 +154,8 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         collector.add_testcase_file(self.test_case_filename)
 
         # register addon
+        if not self.__class__._addons:
+            self.__class__._addons = []
         for addon in self._addons:
             addon.initialize(self)
 
