@@ -42,6 +42,7 @@ class AssertionRecorder(PocoTestResultEmitter):
                     break
             if srcfilename:
                 srcfilename = os.path.relpath(srcfilename, self.collector.get_project_root_path())
+                srcfilename = srcfilename.replace('\\', '/')
             formatted_tb = ''.join(traceback.format_exception(errtype, e, tb))
         else:
             formatted_tb = ''

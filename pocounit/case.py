@@ -1,7 +1,7 @@
 # coding=utf-8
 
+import re
 import six
-import sys
 import traceback
 import unittest
 import warnings
@@ -20,6 +20,9 @@ from pocounit.result.runner_runtime import RunnerRuntimeLog
 from pocounit.result.assertion import AssertionRecorder
 
 
+SPECIAL_CHARS = re.compile(r'[\/\\\.]')
+
+
 class PocoTestCase(unittest.TestCase, FixtureUnit):
     """
     * longMessage: determines whether long messages (including repr of
@@ -36,7 +39,10 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         unittest.TestCase.__init__(self)
         FixtureUnit.__init__(self)
 
-        collector = PocoResultCollector(self.project_root, [self.test_case_filename], self.name(), self.test_case_dir)
+        # check testcase name
+        self.testcase_name = re.sub(SPECIAL_CHARS, lambda g: '-', self.name())
+
+        collector = PocoResultCollector(self.project_root, [self.test_case_filename], self.testcase_name, self.test_case_dir)
         self.set_result_collector(collector)
 
         meta_info_emitter = MetaInfo(collector)
@@ -69,6 +75,10 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
             return cls.__name__
         else:
             return cls.__class__.__name__
+
+    @classmethod
+    def getMetaInfo(cls):
+        return {}
 
     @classmethod
     def setUpClass(cls):
@@ -153,13 +163,15 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         collector = self.get_result_collector()
         collector.add_testcase_file(self.test_case_filename)
 
+        self.meta_info_emitter.set_testcase_metainfo(self.testcase_name, self.getMetaInfo())
+
         # register addon
         if not self.__class__._addons:
             self.__class__._addons = []
         for addon in self._addons:
             addon.initialize(self)
 
-        self.meta_info_emitter.test_started(self.__class__.__name__)
+        self.meta_info_emitter.test_started(self.testcase_name)
 
         # start result emitter
         for name, emitter in self._result_emitters.items():
@@ -171,12 +183,8 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
                               .format(emitter.__class__.__name__, traceback.format_exc()))
 
         # run test
-        ex = None
-        ret = None
-        try:
-            ret = super(PocoTestCase, self).run(result)
-        except Exception as e:
-            ex = e
+        # super.run(...) will never raise
+        ret = super(PocoTestCase, self).run(result)
 
         assertionRecorder = self.get_result_emitter('assertionRecorder')
         for _, exc_type, e, tb in result.detail_errors:
@@ -189,27 +197,27 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
             except:
                 pass
 
-        self.meta_info_emitter.test_ended(self.__class__.__name__)
+        self.meta_info_emitter.test_ended(self.testcase_name)
 
         # handle result
-        if ex is not None:
-            self.meta_info_emitter.test_fail(self.__class__.__name__)
-            raise ex
+        if result.detail_errors or result.errors or result.failures:
+            self.meta_info_emitter.test_fail(self.testcase_name)
         else:
-            self.meta_info_emitter.test_succeed(self.__class__.__name__)
-            return ret
+            self.meta_info_emitter.test_succeed(self.testcase_name)
+        return ret
 
-    def fail(self, msg=None):
+    def fail(self, fail_msg=None):
+        e = self.failureException(fail_msg)
+        errmsg = six.text_type(e)
+        err_typename = self.failureException.__name__
         assertionRecorder = self.get_result_emitter('assertionRecorder')
-        try:
-            return super(PocoTestCase, self).fail(msg)
-        except:
-            exc_type, e, exc_tb = sys.exc_info()
-            assertionRecorder.fail(msg, six.text_type(e), traceback.format_exc())
-            six.reraise(exc_type, exc_type(msg), exc_tb)
+        assertionRecorder.fail(fail_msg, errmsg, 'Traceback: (failure cause)\n{}{}: {}'
+                               .format(''.join(traceback.format_stack()), err_typename, fail_msg))
+        raise super(PocoTestCase, self).fail(fail_msg)
 
     # assertions
     def assertTrue(self, expr, msg=None):
+        expr = bool(expr)
         assertionRecorder = self.get_result_emitter('assertionRecorder')
         assertionRecorder.assert_('True', [expr], msg)
 
@@ -218,6 +226,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
             self.fail(msg)
 
     def assertFalse(self, expr, msg=None):
+        expr = bool(expr)
         assertionRecorder = self.get_result_emitter('assertionRecorder')
         assertionRecorder.assert_('False', [expr], msg)
 

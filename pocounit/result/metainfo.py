@@ -47,6 +47,15 @@ class MetaInfo(PocoTestResultEmitter):
             }
         })
 
+    def set_testcase_metainfo(self, name, metainfo):
+        self.emit(self.TAG, {
+            'type': 'testcase',
+            'value': {
+                'name': name,
+                'metainfo': metainfo,
+            }
+        })
+
     def snapshot_device_info(self, udid, info):
         """
         Take down the device info according udid.
