@@ -21,13 +21,13 @@ Installation
 
 
 用法
---
+----
 
 首先需要继承基类PocoTestCase实现项目组自己的MyBaseTestCase，在MyBaseTestCase预处理中将需要用到的对象准备好（包括实例化hunter和poco和动作捕捉），以后在其余用例中继承MyBaseTestCase即可。
 
 基本用法可参考一下代码模板。
 
-.. code-blick:: python
+.. code-block:: python
 
     # coding=utf-8
 
@@ -50,7 +50,7 @@ Installation
 
 然后可以开始编写自己的testcase
 
-.. code-blick:: python
+.. code-block:: python
 
     # coding=utf8
 
