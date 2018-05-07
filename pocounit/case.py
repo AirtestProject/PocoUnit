@@ -18,6 +18,7 @@ from pocounit.result.action import ActionRecorder
 from pocounit.result.app_runtime import AppRuntimeLog
 from pocounit.result.runner_runtime import RunnerRuntimeLog
 from pocounit.result.assertion import AssertionRecorder
+from pocounit.result.site_snapshot import SiteSnapshot
 
 
 SPECIAL_CHARS = re.compile(r'[\/\\\.]')
@@ -52,6 +53,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         action_recorder = ActionRecorder(collector)
         app_runtime_log = AppRuntimeLog(collector)
         assertion_recorder = AssertionRecorder(collector)
+        site_snapshot = SiteSnapshot(collector)
 
         self.add_result_emitter('metaInfo', meta_info_emitter)
         self.add_result_emitter('runnerRuntimeLog', runner_runtime_log)
@@ -60,6 +62,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         self.add_result_emitter('actionRecorder', action_recorder)
         self.add_result_emitter('appRuntimeLog', app_runtime_log)
         self.add_result_emitter('assertionRecorder', assertion_recorder)
+        self.add_result_emitter('siteSnapshot', site_snapshot)
 
         self.meta_info_emitter = meta_info_emitter
 
@@ -148,6 +151,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
             cls._addons = []
         cls._addons.append(addon)
 
+    # deprecation warning
     @classmethod
     def register_addin(cls, v):
         warnings.warn('`register_addin` is deprecated. Please use `register_addon` instead.')
@@ -194,8 +198,10 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         for name, emitter in self._result_emitters.items():
             try:
                 emitter.stop()
-            except:
-                pass
+            except Exception as e:
+                warnings.warn('Fail to stop result emitter: "{}". You can report this error to the developers or just '
+                              'ignore it. Error message: \n"{}"'
+                              .format(emitter.__class__.__name__, traceback.format_exc()))
 
         self.meta_info_emitter.test_ended(self.testcase_name)
 

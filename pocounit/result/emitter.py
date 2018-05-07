@@ -11,8 +11,8 @@ class PocoTestResultEmitter(object):
     def stop(self):
         pass
 
-    def finalize(self):
-        pass
+    # def finalize(self):
+    #     pass
 
     def emit(self, tag, value):
         self.collector.collect(tag, value)
