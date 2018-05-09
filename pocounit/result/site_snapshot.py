@@ -46,8 +46,8 @@ class SiteSnapshot(PocoTestResultEmitter):
         site_id = site_id or time.time()
         b64img, fmt = self.poco.snapshot()
         width, height = self.poco.get_screen_size()
-        basename = 'hierarchy-{}.json'.format(site_id)
-        fpath = os.path.join(self.save_path, 'hierarchy-{}.{}'.format(site_id, fmt))
+        basename = 'screen-{}.json'.format(site_id, fmt)
+        fpath = os.path.join(self.save_path, basename)
         with open(fpath, 'wb') as f:
             f.write(base64.b64decode(b64img))
         self.emit(self.TAG, {'type': 'screen', 'dataPath': 'snapshots/{}'.format(basename), 'site_id': site_id,
