@@ -3,9 +3,9 @@
 from pocounit.addons import PocoUnitAddon
 
 
-class SiteCapturer(PocoUnitAddon):
+class SiteCaptor(PocoUnitAddon):
     def __init__(self, poco):
-        super(SiteCapturer, self).__init__()
+        super(SiteCaptor, self).__init__()
         self.poco = poco
         self.site_snapshot = None
 
