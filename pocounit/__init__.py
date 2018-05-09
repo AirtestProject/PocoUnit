@@ -42,8 +42,8 @@ def main():
         suite.addTest(case)
 
     runner = PocoTestRunner()
-    success = runner.run(suite)
+    result = runner.run(suite)
 
-    if not success:
+    if not result.wasSuccessful():
         exit(-1)
 

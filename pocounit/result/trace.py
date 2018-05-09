@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import fnmatch
 import os
 import sys
 import shutil
@@ -15,6 +16,7 @@ class ScriptTracer(PocoTestResultEmitter):
         self.project_root = self.collector.get_project_root_path()
         self._script_filenames = None
         self._script_filenames_lower = None
+        self._tracing_file_pattern = []
         self._origin_trace_func = None
 
     def start(self):
@@ -33,10 +35,19 @@ class ScriptTracer(PocoTestResultEmitter):
     def stop(self):
         sys.settrace(self._origin_trace_func)
 
+    def file_hit(self, fname):
+        for pat in self._script_filenames_lower:
+            if fnmatch.fnmatch(fname, pat):
+                return True
+        for pat in self._tracing_file_pattern:
+            if fnmatch.fnmatch(fname, pat):
+                return True
+        return False
+
     def _make_tracer(self):
         def tracer(frame, event, arg):
             co_filename = frame.f_code.co_filename
-            if event == 'line' and co_filename.lower().replace('\\', '/') in self._script_filenames_lower:
+            if event == 'line' and self.file_hit(co_filename.lower().replace('\\', '/')):
                 line_num = frame.f_lineno
                 fname = os.path.relpath(co_filename, self.project_root)
                 fname = fname.replace('\\', '/')
