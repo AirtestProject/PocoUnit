@@ -5,6 +5,7 @@ import threading
 
 class StreamLogger(object):
     def __init__(self, filename='poco-stream-result.log'):
+        print('log filename will be "{}"'.format(filename))
         self.logfile = open(filename, 'w')
         self.mutex = threading.Lock()
 

@@ -21,7 +21,7 @@ from pocounit.result.assertion import AssertionRecorder
 from pocounit.result.site_snapshot import SiteSnapshot
 
 
-SPECIAL_CHARS = re.compile(r'[\/\\\.]')
+SPECIAL_CHARS = re.compile(r'[\/\\\.:*?"<>|]')
 
 
 class PocoTestCase(unittest.TestCase, FixtureUnit):
