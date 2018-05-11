@@ -15,6 +15,7 @@ class FixtureUnit(object):
         test_case_dir = os.path.dirname(test_case_filename)
         project_root = get_project_root(test_case_filename)
         print('using "{}" as project root. This testcase is "{}"'.format(project_root, self.__class__.__name__))
+        print('testcase locates in "{}"'.format(test_case_filename))
         self.set_assets_manager(AssetsManager(project_root))
 
         self.test_case_filename = test_case_filename
