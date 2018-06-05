@@ -1,11 +1,16 @@
 # coding-utf-8
 
 import base64
+import hashlib
 import time
 import json
 import os
 
 from pocounit.result.emitter import PocoTestResultEmitter
+
+
+def make_hash(src):
+    return hashlib.md5(bytes(src)).hexdigest()
 
 
 class SiteSnapshot(PocoTestResultEmitter):
@@ -33,7 +38,7 @@ class SiteSnapshot(PocoTestResultEmitter):
             return
         site_id = site_id or time.time()
         hierarchy_data = self.poco.agent.hierarchy.dump()
-        basename = 'hierarchy-{}.json'.format(site_id)
+        basename = 'hierarchy-{}.json'.format(make_hash(site_id))
         fpath = os.path.join(self.save_path, basename)
         with open(fpath, 'wb') as f:
             f.write(json.dumps(hierarchy_data))
@@ -46,7 +51,7 @@ class SiteSnapshot(PocoTestResultEmitter):
         site_id = site_id or time.time()
         b64img, fmt = self.poco.snapshot()
         width, height = self.poco.get_screen_size()
-        basename = 'screen-{}.json'.format(site_id, fmt)
+        basename = 'screen-{}.json'.format(make_hash(site_id))
         fpath = os.path.join(self.save_path, basename)
         with open(fpath, 'wb') as f:
             f.write(base64.b64decode(b64img))
