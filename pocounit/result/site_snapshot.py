@@ -5,12 +5,17 @@ import hashlib
 import time
 import json
 import os
+import six
 
 from pocounit.result.emitter import PocoTestResultEmitter
 
 
 def make_hash(src):
-    return hashlib.md5(bytes(src)).hexdigest()
+    if isinstance(src, six.text_type):
+        src = src.encode('utf-8')
+    else:
+        src = six.binary_type(src)
+    return hashlib.md5(src).hexdigest()
 
 
 class SiteSnapshot(PocoTestResultEmitter):
@@ -41,7 +46,10 @@ class SiteSnapshot(PocoTestResultEmitter):
         basename = 'hierarchy-{}.json'.format(make_hash(site_id))
         fpath = os.path.join(self.save_path, basename)
         with open(fpath, 'wb') as f:
-            f.write(json.dumps(hierarchy_data))
+            h = json.dumps(hierarchy_data)
+            if six.PY3:
+                h = h.encode('utf-8')
+            f.write(h)
         self.emit(self.TAG, {'type': 'hierarchy', 'dataPath': 'snapshots/{}'.format(basename), 'site_id': site_id})
         return fpath
 
