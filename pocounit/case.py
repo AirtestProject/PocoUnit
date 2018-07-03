@@ -20,6 +20,8 @@ from pocounit.result.runner_runtime import RunnerRuntimeLog
 from pocounit.result.assertion import AssertionRecorder
 from pocounit.result.site_snapshot import SiteSnapshot
 
+from unittest.case import _Outcome  # noqa
+
 
 SPECIAL_CHARS = re.compile(r'[\/\\\.:*?"<>|]')
 
@@ -65,6 +67,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         self.add_result_emitter('siteSnapshot', site_snapshot)
 
         self.meta_info_emitter = meta_info_emitter
+        self._exceptions = set()
 
     @classmethod
     def name(cls):
@@ -187,12 +190,9 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
                               .format(emitter.__class__.__name__, traceback.format_exc()))
 
         # run test
-        # super.run(...) will never raise
-        ret = super(PocoTestCase, self).run(result)
-
-        assertionRecorder = self.get_result_emitter('assertionRecorder')
-        for _, exc_type, e, tb in result.detail_errors:
-            assertionRecorder.traceback(exc_type, e, tb)
+        # this method never raises
+        ret = self._super_run_modified(result)
+        self.record_exceptions(result.errors)
 
         # stop result emitter
         for name, emitter in self._result_emitters.items():
@@ -211,6 +211,103 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         else:
             self.meta_info_emitter.test_succeed(self.testcase_name)
         return ret
+
+    def _super_run_modified(self, result=None):
+        """
+        Modify run method in super class. Add some event notification methods.
+        Note: this method never raises
+        """
+
+        orig_result = result
+        if result is None:
+            result = self.defaultTestResult()
+            startTestRun = getattr(result, 'startTestRun', None)
+            if startTestRun is not None:
+                startTestRun()
+
+        result.startTest(self)
+
+        testMethod = getattr(self, self._testMethodName)
+        if (getattr(self.__class__, "__unittest_skip__", False) or
+                getattr(testMethod, "__unittest_skip__", False)):
+            # If the class or method was skipped.
+            try:
+                skip_why = (getattr(self.__class__, '__unittest_skip_why__', '')
+                            or getattr(testMethod, '__unittest_skip_why__', ''))
+                self._addSkip(result, self, skip_why)
+            finally:
+                result.stopTest(self)
+            return
+        expecting_failure_method = getattr(testMethod,
+                                           "__unittest_expecting_failure__", False)
+        expecting_failure_class = getattr(self,
+                                          "__unittest_expecting_failure__", False)
+        expecting_failure = expecting_failure_class or expecting_failure_method
+        outcome = _Outcome(result)
+        try:
+            self._outcome = outcome
+
+            with outcome.testPartExecutor(self):
+                self.setUp()
+            if outcome.success:
+                outcome.expecting_failure = expecting_failure
+                with outcome.testPartExecutor(self, isTest=True):
+                    testMethod()
+
+                # 当前用例失败时触发on_errors回调
+                if not outcome.success:
+                    with outcome.testPartExecutor(self):
+                        self.on_errors(outcome.errors)
+
+                outcome.expecting_failure = False
+                with outcome.testPartExecutor(self):
+                    self.tearDown()
+
+            self.doCleanups()
+            for test, reason in outcome.skipped:
+                self._addSkip(result, test, reason)
+            self._feedErrorsToResult(result, outcome.errors)
+            if outcome.success:
+                if expecting_failure:
+                    if outcome.expectedFailure:
+                        self._addExpectedFailure(result, outcome.expectedFailure)
+                    else:
+                        self._addUnexpectedSuccess(result)
+                else:
+                    result.addSuccess(self)
+            return result
+        finally:
+            result.stopTest(self)
+            if orig_result is None:
+                stopTestRun = getattr(result, 'stopTestRun', None)
+                if stopTestRun is not None:
+                    stopTestRun()
+
+            # explicitly break reference cycles:
+            # outcome.errors -> frame -> outcome -> outcome.errors
+            # outcome.expectedFailure -> frame -> outcome -> outcome.expectedFailure
+            outcome.errors.clear()
+            outcome.expectedFailure = None
+
+            # clear the outcome, no more needed
+            self._outcome = None
+
+    def on_errors(self, errors):
+        if len(errors) > 0:
+            site_snapshot = self.get_result_emitter('siteSnapshot')
+            site_snapshot.snapshot('testcase_err_{}'.format(errors[0][1]))
+
+        self.record_exceptions(errors)
+
+    def record_exceptions(self, errors):
+        assertionRecorder = self.get_result_emitter('assertionRecorder')
+        for case, exc_info in errors:
+            if not exc_info or exc_info in self._exceptions:
+                continue
+            self._exceptions.add(exc_info)
+            if type(exc_info) is tuple:
+                exc_type, e, tb = exc_info
+                assertionRecorder.traceback(exc_type, e, tb)
 
     def fail(self, fail_msg=None):
         e = self.failureException(fail_msg)

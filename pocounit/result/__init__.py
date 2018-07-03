@@ -13,3 +13,8 @@ class PocoTestResult(TextTestResult):
         exc_type, e, exc_tb = err
         self.detail_errors.append((test, exc_type, e, exc_tb))
         return super(PocoTestResult, self).addError(test, err)
+
+    def addFailure(self, test, err):
+        exc_type, e, exc_tb = err
+        self.detail_errors.append((test, exc_type, e, exc_tb))
+        return super(PocoTestResult, self).addFailure(test, err)
