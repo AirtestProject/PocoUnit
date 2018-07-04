@@ -286,7 +286,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
             # explicitly break reference cycles:
             # outcome.errors -> frame -> outcome -> outcome.errors
             # outcome.expectedFailure -> frame -> outcome -> outcome.expectedFailure
-            outcome.errors.clear()
+            del outcome.errors[:]  # equivalent to [].clear in py3
             outcome.expectedFailure = None
 
             # clear the outcome, no more needed
