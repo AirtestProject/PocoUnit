@@ -21,6 +21,7 @@ class PocoResultCollector(object):
         root_paths.append(testcase_name)
 
         self.root = os.path.join(*root_paths)
+        self.root = os.path.normpath(self.root)
         if os.path.isfile(self.root):
             raise RuntimeError('"{}" already exists as non-directory, please remove it first.')
         if not os.path.exists(self.root):
