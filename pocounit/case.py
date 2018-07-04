@@ -2,6 +2,7 @@
 
 import re
 import six
+import sys
 import traceback
 import unittest
 import warnings
@@ -24,6 +25,12 @@ from pocounit.utils.outcome import Outcome
 
 
 SPECIAL_CHARS = re.compile(r'[\/\\\.:*?"<>|]')
+
+
+class _UnexpectedSuccess(Exception):
+    """
+    The test was supposed to fail, but it didn't!
+    """
 
 
 class PocoTestCase(unittest.TestCase, FixtureUnit):
@@ -291,6 +298,52 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
 
             # clear the outcome, no more needed
             self._outcome = None
+
+    def _addSkip(self, result, test_case, reason):
+        # copy from python3.5.3 unittest.case
+        addSkip = getattr(result, 'addSkip', None)
+        if addSkip is not None:
+            addSkip(test_case, reason)
+        else:
+            warnings.warn("TestResult has no addSkip method, skips not reported",
+                          RuntimeWarning, 2)
+            result.addSuccess(test_case)
+
+    def _feedErrorsToResult(self, result, errors):
+        # copy from python3.5.3 unittest.case
+        for test, exc_info in errors:
+            if exc_info is not None:
+                if issubclass(exc_info[0], self.failureException):
+                    result.addFailure(test, exc_info)
+                else:
+                    result.addError(test, exc_info)
+
+    def _addExpectedFailure(self, result, exc_info):
+        # copy from python3.5.3 unittest.case
+        try:
+            addExpectedFailure = result.addExpectedFailure
+        except AttributeError:
+            warnings.warn("TestResult has no addExpectedFailure method, reporting as passes",
+                          RuntimeWarning)
+            result.addSuccess(self)
+        else:
+            addExpectedFailure(self, exc_info)
+
+    def _addUnexpectedSuccess(self, result):
+        # copy from python3.5.3 unittest.case
+        try:
+            addUnexpectedSuccess = result.addUnexpectedSuccess
+        except AttributeError:
+            warnings.warn("TestResult has no addUnexpectedSuccess method, reporting as failure",
+                          RuntimeWarning)
+            # We need to pass an actual exception and traceback to addFailure,
+            # otherwise the legacy result can choke.
+            try:
+                raise _UnexpectedSuccess
+            except _UnexpectedSuccess:
+                result.addFailure(self, sys.exc_info())
+        else:
+            addUnexpectedSuccess(self)
 
     def on_errors(self, errors):
         if len(errors) > 0:
