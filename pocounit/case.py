@@ -20,7 +20,7 @@ from pocounit.result.runner_runtime import RunnerRuntimeLog
 from pocounit.result.assertion import AssertionRecorder
 from pocounit.result.site_snapshot import SiteSnapshot
 
-from unittest.case import _Outcome  # noqa
+from pocounit.utils.outcome import Outcome
 
 
 SPECIAL_CHARS = re.compile(r'[\/\\\.:*?"<>|]')
@@ -243,7 +243,7 @@ class PocoTestCase(unittest.TestCase, FixtureUnit):
         expecting_failure_class = getattr(self,
                                           "__unittest_expecting_failure__", False)
         expecting_failure = expecting_failure_class or expecting_failure_method
-        outcome = _Outcome(result)
+        outcome = Outcome(result)
         try:
             self._outcome = outcome
 
