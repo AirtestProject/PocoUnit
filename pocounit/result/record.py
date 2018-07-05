@@ -8,9 +8,7 @@ from airtest.core.helper import G
 
 
 def get_udid(dev):
-    if hasattr(dev, 'serialno'):
-        return dev.serialno
-    raise TypeError('Cannot get udid from {}'.format(repr(dev)))
+    return dev.uuid
 
 
 # 多设备录屏待测试
